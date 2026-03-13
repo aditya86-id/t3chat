@@ -1,28 +1,32 @@
-import React from 'react' 
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
-import { redirect } from 'next/dist/server/api-utils';
+import { auth } from "@/lib/auth";
+import { currentUser } from "@/modules/authentication/actions";
+import { getAllChats } from "@/modules/chat/actions";
+import ChatSidebar from "@/modules/chat/components/chat-sidebar";
+import Header from "@/modules/chat/components/header";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import React from "react";
 
-const layout = async({children}) => {
-    const session = await auth.api.getSession({
-            headers:await headers()
-        });
-    
-    if(!session){
-        return redirect("/sign-in");
-    }
+const layout = async ({ children }) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
+  const user = await currentUser()
 
-  return (
-    <div className="flex h-screen overflow-hidden">
-        <ChatSidebar/>
-      <main className="flex-1 overflow-hidden">
-        {/* header*/}
-      {children}
-      </main>
-    </div>
-  )
+  const {data:chats} = await getAllChats();
+
+  if (!session) {
+    return redirect("/sign-in");
+  }
+
+  return (<div className="flex h-screen overflow-hidden">
+    <ChatSidebar user={user} chats={chats}/>
+    <main className="flex-1 overflow-hidden">
+    <Header/>
+    {children}
+    </main>
+  </div>)
 };
 
-
-export default layout
+export default layout;
